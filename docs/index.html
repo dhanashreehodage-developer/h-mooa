@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H-MOOA | Multi-Objective Feature Selection for Intrusion Detection</title>
+<meta name="description" content="H-MOOA: hybrid global-local multi-objective feature selection for a compact intrusion detection system on the CIC-IIoT-2025 dataset.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="logo">H</span>H-MOOA</a>
+    <nav>
+      <a href="#problem">Problem</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#significance">Significance</a>
+      <a href="#robustness">Robustness</a>
+      <a href="#hmooa">H-MOOA experiments</a>
+      <a href="#reproduce">Reproduce</a>
+      <a class="btn btn-sm" href="https://github.com/dhanashreehodage-developer/h-mooa" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<section id="top" class="hero">
+  <div class="container">
+    <p class="eyebrow">Industrial IoT security &middot; CIC-IIoT-2025</p>
+    <h1>Algorithmic Optimization for Intrusion Detection</h1>
+    <p class="lead">Multi-objective feature selection using hybrid global-local optimization. A compact Random Forest IDS that keeps <strong>95.8% macro F1 with only 9 of 71 features</strong>, evaluated on a leakage-safe held-out test set.</p>
+    <div class="hero-cta">
+      <a class="btn" href="#results">See the results</a>
+      <a class="btn btn-ghost" href="https://github.com/dhanashreehodage-developer/h-mooa/blob/main/main-h-mooa.ipynb" target="_blank" rel="noopener">Open the notebook</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="num">0.9708</span><span class="lbl">Macro F1, RF_71 (all features)</span></div>
+      <div class="stat accent"><span class="num">0.9579</span><span class="lbl">Macro F1, RF_9 (best compact)</span></div>
+      <div class="stat"><span class="num">87.3%</span><span class="lbl">Fewer features (71 &rarr; 9)</span></div>
+      <div class="stat"><span class="num">109,771</span><span class="lbl">Held-out test samples</span></div>
+    </div>
+    <p class="note">All headline numbers are <span class="badge actual">Actual</span> results printed by the notebook (Step 6.55, final held-out test consolidation).</p>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="container">
+    <h2>The problem</h2>
+    <div class="grid-2">
+      <div>
+        <p>Industrial IoT networks need intrusion detection that is accurate, cheap to run and has few false alarms. Full-feature models are accurate but expensive to compute and harder to deploy on constrained hardware.</p>
+        <p>This project searches for the <strong>smallest feature subset</strong> that keeps detection performance high, balancing three objectives at once:</p>
+        <ul class="ticks">
+          <li>maximize macro F1 across all 8 traffic classes</li>
+          <li>minimize macro false positive rate (FPR)</li>
+          <li>minimize the number of features (and therefore cost)</li>
+        </ul>
+        <div class="kv">
+          <div><span>Dataset</span><b>CIC DataSenseIoT 2025 (CIC-IIoT-2025)</b></div>
+          <div><span>Records after cleaning</span><b>685,671</b></div>
+          <div><span>Original features</span><b>71</b></div>
+          <div><span>Classes</span><b>8</b></div>
+          <div><span>Imbalance ratio</span><b>66.6 : 1 (benign vs bruteforce)</b></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Class distribution</h3><span class="badge actual">Actual</span></div>
+        <canvas id="classDist" height="260"></canvas>
+        <p class="src">Source: Notebook Phase 4, Steps 4.4-4.5</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="method" class="alt">
+  <div class="container">
+    <h2>Method</h2>
+    <p class="sub">A leakage-safe pipeline followed by hybrid global-local optimization.</p>
+    <div class="pipeline">
+      <div class="step"><span class="n">1</span><h4>Network traffic</h4><p>8 classes: benign, bruteforce, ddos, dos, malware, mitm, recon, web</p></div>
+      <div class="step"><span class="n">2</span><h4>Leakage-safe preprocessing</h4><p>Drop label / ID / timestamp columns, remove duplicates and conflicting labels, group-aware splits</p></div>
+      <div class="step"><span class="n">3</span><h4>Global search</h4><p>Multi-objective feature selection with a non-dominated Pareto archive</p></div>
+      <div class="step"><span class="n">4</span><h4>Local refinement</h4><p>Importance-guided iterative reduction: 71 &rarr; 11 &rarr; 9 &rarr; 6 features</p></div>
+      <div class="step"><span class="n">5</span><h4>Compact IDS</h4><p>Random Forest (100 trees, balanced class weights), evaluated on the held-out test set</p></div>
+    </div>
+    <div class="grid-4 tech">
+      <div class="card small"><h4>Binary Firefly-PSO</h4><p>Hybrid swarm search over feature masks with a bounded Pareto archive.</p></div>
+      <div class="card small"><h4>Cuckoo Search</h4><p>Levy-flight search over Random Forest hyperparameters.</p></div>
+      <div class="card small"><h4>Pareto utilities</h4><p>Dominance checks, fast non-dominated sorting, crowding distance.</p></div>
+      <div class="card small"><h4>Adaptive thresholds</h4><p>Class-specific decision thresholds tuned on a separate calibration split.</p></div>
+    </div>
+    <figure class="figure">
+      <img src="assets/framework.png" alt="Research framework diagram exported from the notebook">
+      <figcaption>Research framework figure exported from the notebook (Phase 10).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="results">
+  <div class="container">
+    <h2>Results on the held-out test set</h2>
+    <p class="sub">109,771 samples never seen during feature selection or tuning. <span class="badge actual">Actual</span> &middot; Notebook Step 6.55</p>
+    <div class="table-wrap">
+      <table id="finalTable"></table>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h3>Accuracy vs. feature count</h3><span class="badge actual">Actual</span></div>
+        <canvas id="tradeoff" height="250"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Training &amp; prediction time</h3><span class="badge actual">Actual</span></div>
+        <canvas id="timing" height="250"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Class-wise F1</h3><span class="badge actual">Actual</span></div>
+      <canvas id="classwise" height="110"></canvas>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h3>RF_9 confusion matrix (test)</h3><span class="badge actual">Actual</span></div>
+        <div id="cm" class="cm"></div>
+        <p class="src">Source: Notebook Step 6.43. Rows = true label, columns = predicted.</p>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-head"><h3>Attacks missed as benign</h3><span class="badge actual">Actual</span></div>
+          <table id="a2b"></table>
+          <p class="src">Of 53,680 attack samples in the test set.</p>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>RF_6 feature importance</h3><span class="badge actual">Actual</span></div>
+          <canvas id="importance" height="210"></canvas>
+          <p class="src">Source: Notebook Step 6.20</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Selected feature subsets</h3></div>
+      <div class="grid-2 feats">
+        <div><h4>RF_9 (best compact model)</h4><ul id="rf9" class="chips"></ul></div>
+        <div><h4>RF_6 (most compact)</h4><ul id="rf6" class="chips"></ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="significance" class="alt">
+  <div class="container">
+    <h2>Statistical significance</h2>
+    <p class="sub">All pairwise differences between RF_71, RF_9 and RF_6 are significant: <b>6/6</b> bootstrap 95% CIs exclude zero and <b>3/3</b> McNemar tests are significant at 0.05 after Holm correction. <span class="badge actual">Actual</span></p>
+    <div class="grid-2">
+      <div class="card"><div class="card-head"><h3>Bootstrap differences (95% CI)</h3></div><div class="table-wrap"><table id="bootstrap"></table></div></div>
+      <div class="card"><div class="card-head"><h3>McNemar tests (Holm-adjusted)</h3></div><div class="table-wrap"><table id="mcnemar"></table></div></div>
+    </div>
+    <p class="callout">Interpretation: the full model is measurably better, but RF_9 gives up only ~1.3 macro-F1 points while using 87% fewer features and training ~27% faster. That is the trade-off the method is designed to expose.</p>
+  </div>
+</section>
+
+<section id="robustness">
+  <div class="container">
+    <h2>Robustness across seeds</h2>
+    <p class="sub">Feature selection rerun with five random seeds on validation data. <span class="badge actual">Actual</span> &middot; Notebook Steps 6.49-6.51</p>
+    <div class="grid-2">
+      <div class="card"><div class="card-head"><h3>Best subset per seed</h3></div><div class="table-wrap"><table id="seeds"></table></div>
+        <p class="src">4 of 5 seeds recover exactly the RF_9 subset (Jaccard = 1.0).</p></div>
+      <div class="card"><div class="card-head"><h3>Feature selection frequency</h3></div><canvas id="freq" height="260"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<section id="hmooa" class="alt">
+  <div class="container">
+    <h2>H-MOOA prototype experiments</h2>
+    <p class="sub">Small-scale smoke tests (20,000 training / 5,000 validation samples, few iterations) on a fresh 70/15/15 split. <span class="badge prelim">Preliminary</span> These validate the algorithms, not final performance.</p>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h3>Firefly-PSO Pareto archive</h3><span class="badge prelim">Preliminary</span></div>
+        <canvas id="fpso" height="250"></canvas>
+        <p class="src">8 particles, 2 iterations, 24 unique evaluations, 11 archived solutions. Notebook Step 6.65</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Cuckoo Search (RF hyperparameters)</h3><span class="badge prelim">Preliminary</span></div>
+        <canvas id="cuckoo" height="250"></canvas>
+        <p class="src">6 nests, 2 iterations, 22 evaluations on RF_9 features. Notebook Step 6.66</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Adaptive class-specific thresholds</h3><span class="badge prelim">Preliminary</span></div>
+      <div class="grid-2"><div class="table-wrap"><table id="thresh"></table></div><div class="table-wrap"><table id="threshClasses"></table></div></div>
+      <p class="callout warn">On the independent assessment split, adaptive thresholds gave <b>no meaningful gain</b> over default argmax (macro F1 0.8952 vs 0.8963). The calibration-split improvement did not generalize. Notebook Step 6.67</p>
+    </div>
+  </div>
+</section>
+
+<section id="reproduce">
+  <div class="container">
+    <h2>Reproduce</h2>
+    <div class="grid-2">
+      <div>
+        <ol class="steps">
+          <li>Open <code>main-h-mooa.ipynb</code> on Kaggle (Python 3.12, Tesla T4) or in Jupyter.</li>
+          <li>Add the CIC-IIoT-2025 dataset. The notebook expects<br><code>/kaggle/input/datasets/muhammadirfangull/cic-iiot-2025/combined_dataset.csv</code></li>
+          <li>Run the cells in order. Outputs go to <code>/kaggle/working/</code> (models, metric tables, figures and a reproducibility ZIP).</li>
+        </ol>
+      </div>
+      <pre class="code"><code>pip install numpy pandas scikit-learn scipy \
+    matplotlib seaborn joblib tensorflow shap lime
+
+git clone https://github.com/dhanashreehodage-developer/h-mooa
+jupyter notebook h-mooa/main-h-mooa.ipynb</code></pre>
+    </div>
+    <div class="card legend">
+      <h4>Result labels used on this site</h4>
+      <p><span class="badge actual">Actual</span> final measured results copied from saved notebook outputs. <span class="badge prelim">Preliminary</span> small smoke-test runs of the H-MOOA components. No values on this page are estimated or simulated. Classification is offline (batch CSV), not a deployed real-time IDS.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>H-MOOA &middot; Multi-Objective Feature Selection for Intrusion Detection on CIC-IIoT-2025</p>
+    <p><a href="https://github.com/dhanashreehodage-developer/h-mooa" target="_blank" rel="noopener">github.com/dhanashreehodage-developer/h-mooa</a></p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
