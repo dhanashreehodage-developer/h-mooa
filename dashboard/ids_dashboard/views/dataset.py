@@ -48,10 +48,16 @@ def _load(fn, name, source):
         st.error(f"Unexpected error while loading the dataset: {exc}")
         return
     reset_downstream()
-    for k in ("X", "y", "target", "features"):
+    for k in ("X", "y", "target", "features", "signature"):
         st.session_state.pop(k, None)
     st.session_state.update(df=df, data_name=name, data_source=source)
     st.success(f"Loaded {len(df):,} rows x {df.shape[1]} columns from {name}.")
+
+
+def _invalidate_prepared():
+    reset_downstream()
+    for k in ("X", "y", "features", "signature"):
+        st.session_state.pop(k, None)
 
 
 def _configure_target(df):
@@ -68,6 +74,7 @@ def _configure_target(df):
     nunique = df[target].nunique(dropna=True)
     if nunique > D.MAX_TARGET_CLASSES:
         c1.error(f"'{target}' has {nunique:,} distinct values; choose a categorical label column.")
+        _invalidate_prepared()
         return
     default_ex = D.default_excluded_columns(df, target)
     excluded = c2.multiselect(
@@ -80,6 +87,7 @@ def _configure_target(df):
         X, y = D.prepare_xy(df, target, features)
     except D.DatasetError as exc:
         st.error(str(exc))
+        _invalidate_prepared()
         return
     signature = (target, tuple(X.columns), len(df))
     if st.session_state.get("signature") != signature:

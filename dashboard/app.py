@@ -41,33 +41,39 @@ def sidebar():
         st.session_state.setdefault("nav", "Project Overview")
         page = st.radio("Navigation", list(PAGES), key="nav", label_visibility="collapsed")
         st.divider()
+        status = st.empty()
+        st.divider()
+        with st.expander("Result labels"):
+            for label, color, note in BADGES.values():
+                st.markdown(f'<span class="badge" style="background:{color}">{label}</span><br>'
+                            f'<span class="badge-note">{note}</span>', unsafe_allow_html=True)
+    return page, status
+
+
+def sidebar_status(status):
+    with status.container():
         df = st.session_state.get("df")
         if df is None:
             st.caption("Dataset: not loaded")
         else:
             src = "SYNTHETIC demo data" if st.session_state.get("data_source") == "synthetic" else st.session_state.get("data_name")
             st.caption(f"Dataset: {src}\n\n{len(df):,} rows, {df.shape[1]} columns")
-            if st.session_state.get("target"):
+            if st.session_state.get("X") is not None:
                 st.caption(f"Target: `{st.session_state['target']}` | features: {len(st.session_state.get('features', []))}")
             if st.session_state.get("rf_result"):
                 st.caption("Random Forest: trained")
-        st.divider()
-        with st.expander("Result labels"):
-            for label, color, note in BADGES.values():
-                st.markdown(f'<span class="badge" style="background:{color}">{label}</span><br>'
-                            f'<span class="badge-note">{note}</span>', unsafe_allow_html=True)
-    return page
 
 
 def main():
     inject_css()
-    page = sidebar()
+    page, status = sidebar()
     header(R.DASHBOARD_TITLE, R.PROJECT_TITLE)
     try:
         PAGES[page].render()
     except Exception as exc:  # noqa: BLE001 - keep the demo running and show what failed
         st.error(f"Something went wrong in '{page}': {exc}")
         st.exception(exc)
+    sidebar_status(status)
 
 
 main()
