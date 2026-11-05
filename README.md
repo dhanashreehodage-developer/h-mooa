@@ -19,13 +19,23 @@ This repository contains the full research notebook (`main-h-mooa.ipynb`) for bu
 
 ## Key results (held-out test set, 109,771 samples)
 
-| Model | Features | Macro F1 |
-|-------|----------|----------|
-| RF_71 (all features) | 71 | 0.9708 |
-| RF_9 (best compact model) | 9 | 0.9579 |
-| RF_6 | 6 | lower than RF_9 (see notebook) |
+| Model | Features | Accuracy | Macro F1 |
+|-------|----------|----------|----------|
+| RF_71 (all features) | 71 | 0.9710 | 0.9708 |
+| RF_9 (best compact model) | 9 | 0.9632 | 0.9579 |
+| RF_6 | 6 | 0.9583 | 0.9508 |
 
 All pairwise differences (RF_71 / RF_9 / RF_6) are statistically significant: 6/6 bootstrap CIs exclude zero, and 3/3 McNemar tests are significant at 0.05.
+
+## Interactive dashboard
+
+The [`dashboard/`](dashboard/) folder contains a Streamlit demonstration dashboard for presenting the methodology and results. See [`dashboard/README.md`](dashboard/README.md) for setup:
+
+```bash
+cd dashboard
+pip install -r requirements.txt
+streamlit run app.py
+```
 
 ## Notebook structure
 

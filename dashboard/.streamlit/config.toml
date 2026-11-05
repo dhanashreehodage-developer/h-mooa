@@ -1,0 +1,16 @@
+[theme]
+base = "dark"
+primaryColor = "#00B4FF"
+backgroundColor = "#0A1628"
+secondaryBackgroundColor = "#11223D"
+textColor = "#E6F1FF"
+
+[server]
+maxUploadSize = 4096
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
